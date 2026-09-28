@@ -12,7 +12,9 @@ export function nearbyChamberCorner(x:number,y:number):ChamberId|null {
   const closest=chamberCorners.map(corner=>({id:corner.id,distance:Math.hypot(corner.x-x,corner.y-y)})).sort((a,b)=>a.distance-b.distance)[0];
   return closest.distance<155?closest.id:null;
 }
+export type AnimeTitle = {title:string;year:string;note:string;cover:string|null;source:string|null;episodesWatched:number|null};
+export type ChampionMastery = {name:string;level:number;points:number;portrait:string|null};
 export type ChamberContent = {
-  league:{riotId:string;opgg:string|null;yearinlol:string|null;seasons:{year:string;summary:string}[]};
-  anime:{profile:string|null;watched:{title:string;year:string;note:string}[]};
+  league:{riotId:string;opgg:string|null;yearinlol:string|null;seasons:{year:string;summary:string}[];snapshot:{hoursPlayed:number|null;rank:string;recordedAt:string;source:string}|null;mastery:ChampionMastery[]};
+  anime:{profile:string|null;watched:AnimeTitle[]};
 };

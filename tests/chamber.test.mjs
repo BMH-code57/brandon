@@ -11,9 +11,16 @@ test('all four corners can be reached from the chamber spawn',()=>{
   assert.equal(nearbyChamberCorner(768,680),null);
 });
 test('private collections tolerate missing input and reject unsafe profile URLs',()=>{
-  for(const raw of [undefined,'broken','null','[]'])assert.deepEqual(parseChamberContent(raw),{league:{riotId:'',opgg:null,yearinlol:null,seasons:[]},anime:{profile:null,watched:[]}});
+  for(const raw of [undefined,'broken','null','[]'])assert.deepEqual(parseChamberContent(raw),{league:{riotId:'',opgg:null,yearinlol:null,seasons:[],snapshot:null,mastery:[]},anime:{profile:null,watched:[]}});
   const data=parseChamberContent(JSON.stringify({league:{opgg:'javascript:alert(1)',yearinlol:'https://yearin.lol.evil.test/user'},anime:{profile:'https://user:pass@anilist.co/user/example',watched:[null,{title:'Test title',year:'2025'}]}}));
   assert.equal(data.league.opgg,null);assert.equal(data.league.yearinlol,null);assert.equal(data.anime.profile,null);
   assert.equal(data.anime.watched.length,1);assert.equal(data.anime.watched[0].title,'Test title');
   assert.equal(parseChamberContent(JSON.stringify({league:{opgg:'https://www.op.gg/summoners/na/test'},anime:{profile:'https://anilist.co/user/example'}})).league.opgg,'https://www.op.gg/summoners/na/test');
+});
+test('collection media and stats reject unsafe URLs and invalid counts',()=>{
+  const data=parseChamberContent(JSON.stringify({league:{snapshot:{hoursPlayed:-1,rank:'Gold'},mastery:[{name:'Example',level:2,points:-2,portrait:'https://ddragon.leagueoflegends.com.evil.test/image.png'}]},anime:{watched:[{title:'Example',cover:'javascript:alert(1)',episodesWatched:4.5},{title:'Valid',cover:'https://media.kitsu.app/anime/poster_images/example.jpg',source:'https://kitsu.app/anime/example',episodesWatched:12}]}}));
+  assert.equal(data.league.snapshot.hoursPlayed,null);
+  assert.equal(data.league.mastery[0].portrait,null);assert.equal(data.league.mastery[0].points,0);
+  assert.equal(data.anime.watched[0].cover,null);assert.equal(data.anime.watched[0].episodesWatched,null);
+  assert.equal(data.anime.watched[1].episodesWatched,12);assert.ok(data.anime.watched[1].cover);
 });

@@ -43,7 +43,11 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
   await gym(request('gym',{headers:{cookie}}));assert.equal(hevyCalls,1);
   assert.equal((await gym(request('gym',{headers:{cookie:cookie+'tampered'}}))).status,401);assert.equal(hevyCalls,1);
  } finally {globalThis.fetch=originalFetch;delete env.HEVY_API_KEY;}
- env.QUIET_CHAMBER_CONTENT=JSON.stringify({anime:{watched:[{title:'Private test collection'}]}});
+ const privateCollection=JSON.stringify({anime:{watched:[{title:'Private test collection'}]}});
+ env.QUIET_CHAMBER_CONTENT=privateCollection.slice(0,17);
+ env.QUIET_CHAMBER_CONTENT_2=privateCollection.slice(17,29);
+ env.QUIET_CHAMBER_CONTENT_3=privateCollection.slice(29,40);
+ env.QUIET_CHAMBER_CONTENT_4=privateCollection.slice(40);
  const collection=await content(request('content',{headers:{cookie}}));
  assert.equal(collection.status,200);assert.match(collection.headers.get('cache-control'),/no-store/);
  assert.equal((await collection.json()).anime.watched[0].title,'Private test collection');

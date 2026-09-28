@@ -23,7 +23,13 @@ Set the optional runtime secret `QUIET_CHAMBER_CONTENT` to JSON using this shape
 
 Season records have `year` and `summary` strings. Watched titles have `title`, optional `year`, and optional `note` strings. Put confirmed profile URLs in the corresponding fields. Supported anime profile hosts are AniList, MyAnimeList, Anime-Planet, and Kitsu. Links must use HTTPS.
 
+Anime entries can also include a verified `cover` image URL, catalog `source` URL, and an explicit `episodesWatched` count when known. Cover hosts are restricted to the supported catalog CDNs. Without an explicit count, the watch-time estimate uses visible episode progress: resume episodes are excluded, replay labels include the displayed episode, and unknown starting points contribute nothing. The estimate assumes 24 minutes per episode and does not invent earlier-season totals or rewatches. The visible label for in-progress titles is Current.
+
+League content supports a dated `snapshot` with `hoursPlayed`, `rank`, `recordedAt`, and `source`, plus `mastery` entries containing `name`, `level`, `points`, and an official Riot Data Dragon `portrait` URL. These are saved records, not a live Riot API connection. All personal values remain in runtime configuration.
+
 Personal records live in runtime configuration so a public source repository does not expose them. `GET /api/secret/content` validates the signed chamber session and uses private, no-store responses. Never put confidential records in committed files or public assets.
+
+For larger collections, split the serialized JSON into pieces of at most 4,000 UTF-8 bytes and store them in order in `QUIET_CHAMBER_CONTENT`, `QUIET_CHAMBER_CONTENT_2`, `QUIET_CHAMBER_CONTENT_3`, and `QUIET_CHAMBER_CONTENT_4`. The authenticated route joins these values before parsing. Keep every chunk secret; clear unused continuation variables when replacing a larger collection with a smaller one. Do not insert extra separators between chunks.
 
 Live third-party profiles open in a new tab. The site does not scrape or iframe third-party pages, and does not imply that manually supplied season notes update automatically. The panel itself scrolls through supplied seasons or watched titles. An automated stats integration can be designed after the exact accounts and available APIs are confirmed.
 
