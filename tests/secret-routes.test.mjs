@@ -13,6 +13,7 @@ const {unlock,leave}=await import('../lib/server/secret-access.ts');
 const {GET:session}=await import('../app/api/secret/session/route.ts');
 const {GET:art}=await import('../app/api/secret/art/route.ts');
 const {GET:content}=await import('../app/api/secret/content/route.ts');
+const {GET:receipt}=await import('../app/api/secret/receipt/route.ts');
 const {GET:gym}=await import('../app/api/secret/gym/route.ts');
 const request=(path,options={})=>new Request('https://cavern.example/api/secret/'+path,{
  ...options,headers:{origin:env.SECRET_ALLOWED_ORIGIN,'content-type':'application/json','oai-authenticated-user-id':'test-visitor',...options.headers},
@@ -24,6 +25,7 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
  assert.equal((await art(request('art'))).status,401);
  assert.equal((await content(request('content'))).status,401);
  assert.equal((await gym(request('gym'))).status,401);
+ assert.equal((await receipt(request('receipt'))).status,401);
  assert.equal((await attempt(password,{origin:'https://untrusted.example'})).status,403);
  assert.equal((await attempt('wrong')).status,401);
  const unlocked=await attempt(password);
@@ -43,6 +45,14 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
   await gym(request('gym',{headers:{cookie}}));assert.equal(hevyCalls,1);
   assert.equal((await gym(request('gym',{headers:{cookie:cookie+'tampered'}}))).status,401);assert.equal(hevyCalls,1);
  } finally {globalThis.fetch=originalFetch;delete env.HEVY_API_KEY;}
+ assert.equal((await receipt(request('receipt',{headers:{cookie}}))).status,503);
+ const image=Buffer.from('RIFFtestWEBPfixture').toString('base64');
+ env.LEAGUE_RECEIPT_1=image.slice(0,8);env.LEAGUE_RECEIPT_2=image.slice(8);
+ const receiptResponse=await receipt(request('receipt',{headers:{cookie}}));
+ assert.equal(receiptResponse.status,200);assert.equal(receiptResponse.headers.get('content-type'),'image/webp');
+ assert.match(receiptResponse.headers.get('cache-control'),/no-store/);
+ assert.equal(Buffer.from(await receiptResponse.arrayBuffer()).toString(),'RIFFtestWEBPfixture');
+ assert.equal((await receipt(request('receipt',{headers:{cookie:cookie+'tampered'}}))).status,401);
  const privateCollection=JSON.stringify({anime:{watched:[{title:'Private test collection'}]}});
  env.QUIET_CHAMBER_CONTENT=privateCollection.slice(0,17);
  env.QUIET_CHAMBER_CONTENT_2=privateCollection.slice(17,29);

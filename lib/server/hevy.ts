@@ -22,7 +22,7 @@ export class HevyError extends Error {
 }
 export async function loadHevyPage(apiKey:string,page:number,fetcher:typeof fetch=fetch) {
   const response=await fetcher(`https://api.hevyapp.com/v1/workouts?page=${page}&pageSize=10`,{
-    method:"GET",headers:{"api-key":apiKey,Accept:"application/json"},redirect:"error",cache:"no-store",signal:AbortSignal.timeout(12000),
+    method:"GET",headers:{"api-key":apiKey,Accept:"application/json"},redirect:"manual",cache:"no-store",signal:AbortSignal.timeout(12000),
   });
   if(response.status===401||response.status===403)throw new HevyError("credentials");
   if(response.status===429)throw new HevyError("rate_limit");

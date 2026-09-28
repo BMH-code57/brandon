@@ -361,3 +361,21 @@ kbd { display:inline-grid; place-items:center; min-width:23px; height:24px; bord
 .forget-access:hover { color:#eddbff; border-color:#9569b7; }
 .remembered-passage { max-width:245px; }
 @media(max-width:700px) { .chamber-actions { right:15px;top:20px;gap:7px; } .chamber-actions .return-cavern { max-width:170px; } .remembered-passage { top:112px;max-width:185px; } }
+
+/* Small lights and collected keepsakes. */
+.fairy-speech { position:absolute; z-index:7; pointer-events:none; transform:translate(-50%,-100%); padding:9px 16px; background:#f2e4ff; color:#341d4c; border:2px solid #9e6bdd; border-radius:13px 13px 13px 3px; box-shadow:0 0 22px #a34be557; font-size:1rem; font-weight:700; }
+.fairy-speech::after { content:""; position:absolute; bottom:-7px; left:14px; width:10px; height:10px; background:#f2e4ff; border-right:2px solid #9e6bdd; border-bottom:2px solid #9e6bdd; transform:rotate(45deg); }
+.gym-hero { position:relative; display:flex; align-items:center; min-height:208px; padding:28px; margin-bottom:23px; overflow:hidden; isolation:isolate; border:1px solid #72518b; border-radius:9px; background:radial-gradient(ellipse at 86% 35%,#55317470,transparent 65%),linear-gradient(130deg,#281435,#100b19); }
+.gym-hero>div { position:relative; z-index:1; max-width:56%; }
+.gym-hero .collection-label { display:flex; gap:8px; align-items:center; line-height:1.6; }
+.gym-hero h3 { font:clamp(1.7rem,4vw,2.65rem) Georgia,serif; letter-spacing:-.035em; margin:13px 0 9px; }
+.gym-hero p { color:#c8aedb; font-size:1rem; margin:0; }
+.gym-hero>img { position:absolute; right:5px; top:7px; width:42%; max-width:240px; height:196px; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 0 19px #a65be44a); z-index:0; }
+.league-receipt { display:grid; grid-template-columns:1fr minmax(190px,280px); gap:28px; align-items:start; margin:36px 0; padding:25px; border:1px solid #6d4986; border-radius:9px; background:#1d1329; }
+.league-receipt h3 { font:1.7rem Georgia,serif; margin:15px 0; }
+.league-receipt p { font-size:.875rem; line-height:1.6; color:#baa1cc; }
+.receipt-image { display:block; transform:rotate(1.5deg); box-shadow:0 12px 30px #08040c99; transition:transform .2s; }
+.receipt-image:hover { transform:rotate(0); }
+.receipt-image img { display:block; width:100%; height:auto; border-radius:2px; }
+@media(max-width:700px) { .gym-hero { padding:21px; min-height:193px; } .gym-hero>img { width:43%; height:175px; top:12px; right:0; } .gym-hero>div { max-width:55%; } .gym-hero .collection-label { font-size:.8125rem; letter-spacing:.06em; } .league-receipt { grid-template-columns:1fr; padding:22px; } .receipt-image { max-width:280px; width:100%; justify-self:center; } }
+@media(prefers-reduced-motion:reduce) { .receipt-image { transition:none; transform:none; } }

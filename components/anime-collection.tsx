@@ -2,7 +2,7 @@
 import {useState} from "react";
 import {ArrowUpRight,BookOpen,Clock3} from "lucide-react";
 import type {AnimeTitle,ChamberContent} from "@/lib/chamber";
-import {animeProgress,animeWatchSummary} from "@/lib/anime-progress";
+import {animeProgress,animeWatchSummary,sortedAnime} from "@/lib/anime-progress";
 
 function Cover({item}:{item:AnimeTitle}) {
   const [failed,setFailed]=useState(false);
@@ -18,7 +18,7 @@ export default function AnimeCollection({anime}:{anime:ChamberContent["anime"]})
     </section>
     <p className="watch-estimate">Estimate: {summary.episodes.toLocaleString("en-US")} recorded episodes × 24 minutes. Earlier seasons and rewatches may be missing; an episode in progress is excluded.</p>
     <div className="collection-heading"><span>THE COLLECTION</span>{anime.profile&&<a className="collection-link" href={anime.profile} target="_blank" rel="noopener noreferrer">Full profile <ArrowUpRight size={15}/><span className="sr-only">in a new tab</span></a>}</div>
-    <ol className="anime-gallery">{anime.watched.map((item,index)=>{
+    <ol className="anime-gallery">{sortedAnime(anime.watched).map((item,index)=>{
       const progress=animeProgress(item);
       return <li className="anime-card" key={`${item.title}-${index}`}>
         <div className="anime-poster"><Cover item={item}/><span className={`anime-status ${progress.status==="Current"?"is-current":""}`}>{progress.status}</span><span className="anime-index">{String(index+1).padStart(2,"0")}</span></div>

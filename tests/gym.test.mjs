@@ -20,8 +20,9 @@ test('Hevy connector uses documented read-only pagination and does not return th
  const page=await loadHevyPage('fixture-api-key',2,async(url,init)=>{observed={url,init};return Response.json({page:2,page_count:3,workouts:[rawWorkout]});});
  assert.equal(observed.url,'https://api.hevyapp.com/v1/workouts?page=2&pageSize=10');
  assert.equal(observed.init.method,'GET');assert.equal(observed.init.headers['api-key'],'fixture-api-key');
- assert.equal(observed.init.redirect,'error');assert.equal(page.pageCount,3);assert.equal(page.workouts[0].id,'workout-1');
+ assert.equal(observed.init.redirect,'manual');assert.equal(page.pageCount,3);assert.equal(page.workouts[0].id,'workout-1');
  assert.equal(JSON.stringify(page).includes('fixture-api-key'),false);
  await assert.rejects(()=>loadHevyPage('fixture-api-key',1,async()=>new Response('private upstream details',{status:401})),error=>error.code==='credentials'&&!error.message.includes('private'));
  await assert.rejects(()=>loadHevyPage('fixture-api-key',1,async()=>new Response('',{status:429})),error=>error.code==='rate_limit');
+ await assert.rejects(()=>loadHevyPage('fixture-api-key',1,async()=>new Response(null,{status:302,headers:{location:'https://untrusted.example'}})),error=>error.code==='unavailable');
 });

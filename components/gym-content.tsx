@@ -42,8 +42,9 @@ export default function GymContent({onLocked}:{onLocked:()=>void}) {
     return()=>controller.abort();
   },[requestedPage,retry,onLocked]);
   const best=heaviestSets(workouts);
-  if(connected===false)return <div className="chamber-empty"><Dumbbell size={32}/><h3>The training journal is getting ready.</h3><p>Workout history and best sets will appear here once Hevy is connected.</p></div>;
   return <div className="gym-content">
+    <section className="gym-hero"><div><span className="collection-label"><Dumbbell size={15}/>THE TRAINING JOURNAL</span><h3>Another rep.</h3><p>Sessions & personal bests.</p></div><img src="/assets/gym-adventurer.png" alt="The purple hooded adventurer lying on a bench and pressing a loaded barbell overhead"/></section>
+    {connected===false&&<div className="chamber-empty"><Dumbbell size={32}/><h3>The training journal is getting ready.</h3><p>Workout history and best sets will appear here once Hevy is connected.</p></div>}
     {workouts.length>0&&<>
       <div className="gym-summary"><div><strong>{workouts.length}</strong><span>workouts loaded</span></div><div><strong>{best.length}</strong><span>weighted exercises</span></div></div>
       <Tabs defaultValue="history" className="gym-tabs"><TabsList aria-label="Workout views"><TabsTrigger value="history">Workout history</TabsTrigger><TabsTrigger value="best">Best sets</TabsTrigger></TabsList>

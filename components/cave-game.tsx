@@ -5,7 +5,7 @@ import { WORLD_WIDTH, WORLD_HEIGHT, movePlayer } from "@/lib/cave-physics";
 import { chamberCorners, isChamberWalkable, nearbyChamberCorner, type ChamberId } from "@/lib/chamber";
 import { SECRET_BOOK } from "@/lib/secret-sequence";
 import { chamberCrystals, chamberLanterns, chamberWater, paintChamberWater } from "@/lib/chamber-atmosphere";
-export type GameSnapshot = { player: { x: number; y: number }; nearby: SectionId | null; markers: { id: SectionId; x: number; y: number }[]; bookNear?: boolean; bookPoint?: {x:number;y:number}; exitNear?: boolean; chamberNear?: ChamberId|null; chamberMarkers?: {id:ChamberId;x:number;y:number}[] };
+export type GameSnapshot = { fairyNear?: boolean; fairyPoint?: {x:number;y:number}; player: { x: number; y: number }; nearby: SectionId | null; markers: { id: SectionId; x: number; y: number }[]; bookNear?: boolean; bookPoint?: {x:number;y:number}; exitNear?: boolean; chamberNear?: ChamberId|null; chamberMarkers?: {id:ChamberId;x:number;y:number}[] };
 export type GameControls = { x: number; y: number; interact: boolean; reset: boolean };
 export default function CaveGame({ controls, paused, reducedMotion, secret = false, onUpdate, onInteract, onChamber, onBook, onMove, onLeave, onReady, onError }: {
   controls: React.MutableRefObject<GameControls>; paused: boolean; reducedMotion: boolean; secret?: boolean;
@@ -52,6 +52,14 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
         waterFrameTime = -100;
         minion?: Phaser.GameObjects.Image;
         minionGlow?: Phaser.GameObjects.Image;
+        fairy?: Phaser.GameObjects.Image;
+        fairyGlow?: Phaser.GameObjects.Image;
+        fairyNear = false;
+        towerGlow?: Phaser.GameObjects.Image;
+        towerGlints?: Phaser.GameObjects.Graphics;
+        television?: Phaser.GameObjects.Graphics;
+        televisionGlow?: Phaser.GameObjects.Image;
+        fireflies: {glow:Phaser.GameObjects.Image;core:Phaser.GameObjects.Arc;x:number;y:number}[] = [];
         cornerLights: Phaser.GameObjects.Image[] = [];
         crystalCores: Phaser.GameObjects.Image[] = [];
         lanternCores: Phaser.GameObjects.Image[] = [];
@@ -67,6 +75,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           else {
             for(const asset of new Set(chamberCorners.map(corner=>corner.asset)))this.load.image(asset,`/assets/${asset}.png`);
             this.load.image("caster-minion","/assets/caster-minion.png");
+            this.load.image("purple-orb-fairy","/assets/purple-orb-fairy.png");
           }
           this.load.on("loaderror", () => latest.current.onError());
         }
@@ -106,6 +115,12 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
               this.add.image(corner.artX,corner.artY,corner.asset).setOrigin(0.5,1).setDisplaySize(corner.width,corner.height).setDepth(corner.artY);
               this.cornerLights.push(this.add.image(corner.artX,corner.artY-corner.height*0.65,"torch-light").setDisplaySize(180,180).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(corner.artY+1));
             }
+            this.towerGlow=this.add.image(341,183,"torch-light").setDisplaySize(105,130).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(366);
+            this.towerGlints=this.add.graphics().setDepth(366);
+            this.television=this.add.graphics().setDepth(366);
+            this.televisionGlow=this.add.image(1198,249,"torch-light").setDisplaySize(80,74).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(366);
+            this.fairyGlow=this.add.image(768,171,"torch-light").setDisplaySize(105,87).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(1001);
+            this.fairy=this.add.image(768,171,"purple-orb-fairy").setDisplaySize(54,40).setDepth(1002);
             const water=this.textures.createCanvas("chamber-water",chamberWater.width,chamberWater.height);
             if(water){this.waterTexture=water;this.waterSurface=this.add.image(chamberWater.x,chamberWater.y,"chamber-water").setOrigin(0);}
             this.waterfall=this.add.graphics();
@@ -135,6 +150,13 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           this.shadow=this.add.ellipse(this.position.x,this.position.y,45,15,0x08040e,0.5);
           this.player=this.add.sprite(this.position.x,this.position.y,"adventurer",0).setOrigin(0.5,60/64).setScale(1.65);
           for(let i=0;i<32;i++) this.motes.push(this.add.circle(220+(i*197%1100),180+(i*127%680),i%3===0?2:1,0xc79aef,0.28));
+          for(let i=0;i<28;i++){
+            const angle=i*Math.PI*2/28;
+            const x=768+Math.cos(angle)*(secret?586:654),y=(secret?465:510)+Math.sin(angle)*(secret?325:363);
+            const glow=this.add.image(x,y,i%3===0?"torch-light":"lantern-light").setDisplaySize(23,23).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(1000);
+            const core=this.add.circle(x,y,i%4===0?1.9:1.25,i%3===0?0xe5c7ff:0xffe6a6).setDepth(1001);
+            this.fireflies.push({glow,core,x,y});
+          }
           this.cameras.main.setBackgroundColor("#0b0810");this.resizeCamera();this.scale.on("resize",this.resizeCamera,this);
           latest.current.onReady();
         }
@@ -182,6 +204,42 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
             const proximity=Math.max(0,1-Math.hypot(corner.x-this.position.x,corner.y-this.position.y)/240);
             light.setAlpha((motion?0.30+Math.sin(time/1300+i)*0.08:0.30)+proximity*0.55);
           });
+          if(this.towerGlow){
+            const pulse=motion?(1+Math.sin(time/900))/2:0.5;
+            this.towerGlow.setAlpha(0.48+pulse*0.42+(chamberNear==="league"?0.2:0)).setDisplaySize(92+pulse*18,117+pulse*18);
+            this.towerGlints?.clear();
+            for(let i=0;i<3;i++){
+              const angle=(motion?time/2100:0)+i*Math.PI*2/3;
+              const x=341+Math.cos(angle)*22,y=187+Math.sin(angle)*12;
+              this.towerGlints?.fillStyle(0xeacbff,0.45+pulse*0.3).fillRect(x,y,2,2);
+            }
+          }
+          if(this.television){
+            // Scan lines stay inside the perspective of the painted CRT glass.
+            this.television.clear();
+            this.television.fillStyle(0xd4a2ff,motion?0.1+(1+Math.sin(time/1300))*0.035:0.12);
+            this.television.fillPoints([{x:1185,y:235},{x:1209,y:242},{x:1209,y:265},{x:1185,y:259}],true);
+            if(motion)for(let i=0;i<3;i++){
+              const progress=(time/3600+i/3)%1;
+              this.television.lineStyle(1,0xeedbff,0.24*(1-Math.abs(progress-0.5)));
+              this.television.lineBetween(1186,236+progress*22,1208,243+progress*21);
+            }
+            this.televisionGlow?.setAlpha(motion?0.48+Math.sin(time/1400)*0.12:0.48);
+          }
+          if(this.fairy&&this.fairyGlow){
+            const x=768+(motion?Math.sin(time/2300)*78:0),y=171+(motion?Math.sin(time/1150)*22:0);
+            this.fairy.setPosition(x,y).setDisplaySize(motion?51+Math.sin(time/85)*3:54,40).setRotation(motion?Math.sin(time/2300)*0.09:0);
+            this.fairyGlow.setPosition(x,y+2).setAlpha(motion?0.65+Math.sin(time/570)*0.13:0.65);
+            const distance=Math.hypot(this.position.x-768,this.position.y-205);
+            this.fairyNear=distance<(this.fairyNear?165:140);
+          }
+          this.fireflies.forEach((fly,i)=>{
+            const phase=motion?time/(1450+i*29):0;
+            const x=fly.x+Math.sin(phase+i*2.1)*17,y=fly.y+Math.cos(phase*0.73+i)*12;
+            const alpha=motion?0.28+(1+Math.sin(time/(800+i*31)+i))*0.29:0.45;
+            fly.glow.setPosition(x,y).setAlpha(alpha*0.9);
+            fly.core.setPosition(x,y).setAlpha(alpha);
+          });
           this.landmarkGlows.forEach((light,i)=>{
             const target=secret?0:Math.max(0,1-Math.hypot(landmarks[i].x-this.position.x,landmarks[i].y-this.position.y)/260);
             const base=secret?(motion?0.30+Math.sin(time/(1500+i*31)+i)*0.12:0.3):(motion?0.20+Math.sin(time/1200+i)*0.06:0.2);
@@ -228,7 +286,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           if(time-this.snapshotTime>40){
             this.snapshotTime=time;const cam=this.cameras.main;
             const project=(x:number,y:number)=>({x:(x-cam.worldView.x)*cam.zoom,y:(y-cam.worldView.y)*cam.zoom});
-            latest.current.onUpdate({player:{...this.position},nearby,bookNear,exitNear,chamberNear,chamberMarkers:secret?chamberCorners.map(corner=>({id:corner.id,...project(corner.artX,corner.labelY)})):[],bookPoint:secret?undefined:project(SECRET_BOOK.x,SECRET_BOOK.y-18),markers:secret?[]:landmarks.map(l=>({id:l.id,...project(l.labelX??l.x,(l.labelY??l.y)+22)}))});
+            latest.current.onUpdate({fairyNear:this.fairyNear,fairyPoint:this.fairy?project(this.fairy.x,this.fairy.y-27):undefined,player:{...this.position},nearby,bookNear,exitNear,chamberNear,chamberMarkers:secret?chamberCorners.map(corner=>({id:corner.id,...project(corner.artX,corner.labelY)})):[],bookPoint:secret?undefined:project(SECRET_BOOK.x,SECRET_BOOK.y-18),markers:secret?[]:landmarks.map(l=>({id:l.id,...project(l.labelX??l.x,(l.labelY??l.y)+22)}))});
           }
         }
       }

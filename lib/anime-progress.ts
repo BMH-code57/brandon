@@ -18,3 +18,6 @@ export function animeWatchSummary(items:AnimeTitle[]) {
   const episodes=recorded.reduce((sum,item)=>sum+(item.episodes??0),0);
   return {episodes,hours:episodes*24/60,recordedTitles:recorded.length,current:progress.filter(item=>item.status==="Current").length};
 }
+export function sortedAnime(items:AnimeTitle[]) {
+  return [...items].sort((a,b)=>(animeProgress(b).hours??-1)-(animeProgress(a).hours??-1)||a.title.localeCompare(b.title,"en",{sensitivity:"base"}));
+}
