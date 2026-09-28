@@ -69,10 +69,6 @@ Original generated art is preserved in `assets/source`. `scripts/prepare-art.py`
 
 The glowing summoning circle at the spawn point, idle bounce, torch lighting, rotating portal core, particles, flickering lanterns, crystal glints, and proximity glows are runtime effects over the painted cave. The quiet chamber adds clipped water refraction, expanding pool ripples, falling waterfall streaks, pulsing crystal cores, and warm lantern flicker. These effects respect the reduced-motion setting. The floating book uses transparent artwork. The sprite frames are normalized from generated art and can be refined in Aseprite.
 
-## Quiet Chamber corners
-
-The League tower, anime shelf, and two construction alcoves have keyboard, touch, and HTML navigation. Personal content is supplied through the authenticated `/api/secret/content` route. See [content configuration](docs/quiet-chamber-content.md) for profile URLs, season notes, and the watched list. Empty collections are labeled honestly until the user supplies their accounts and titles.
-
 ## Verification
 
 ```sh
@@ -81,7 +77,7 @@ node --experimental-strip-types --test tests/*.test.mjs
 pnpm build
 ```
 
-Tests cover movement bounds, the four-interaction sequence, password verification, signed-session tampering and expiration, protected route responses, cookie properties, and rate limits against SQLite using the actual migration.
+Tests cover movement bounds, the four-interaction sequence, password verification, signed-session tampering and expiration, protected route responses, cookie properties, and rate limits against SQLite using the actual migration. Hevy checks cover request handling, normalization, best-set comparisons, private caching, and rejection of unauthenticated requests before upstream access.
 
 ## Project conventions
 

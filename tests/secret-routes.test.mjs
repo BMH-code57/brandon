@@ -13,6 +13,7 @@ const {unlock,leave}=await import('../lib/server/secret-access.ts');
 const {GET:session}=await import('../app/api/secret/session/route.ts');
 const {GET:art}=await import('../app/api/secret/art/route.ts');
 const {GET:content}=await import('../app/api/secret/content/route.ts');
+const {GET:gym}=await import('../app/api/secret/gym/route.ts');
 const request=(path,options={})=>new Request('https://cavern.example/api/secret/'+path,{
  ...options,headers:{origin:env.SECRET_ALLOWED_ORIGIN,'content-type':'application/json','oai-authenticated-user-id':'test-visitor',...options.headers},
 });
@@ -22,6 +23,7 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
  assert.equal((await session(request('session'))).status,401);
  assert.equal((await art(request('art'))).status,401);
  assert.equal((await content(request('content'))).status,401);
+ assert.equal((await gym(request('gym'))).status,401);
  assert.equal((await attempt(password,{origin:'https://untrusted.example'})).status,403);
  assert.equal((await attempt('wrong')).status,401);
  const unlocked=await attempt(password);
@@ -29,6 +31,18 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
  const header=unlocked.headers.get('set-cookie');
  assert.match(header,/__Host-cavern-session=/);assert.match(header,/HttpOnly/);assert.match(header,/SameSite=None/);assert.match(header,/Partitioned/);assert.match(header,/Secure/);assert.match(header,/Max-Age=604800/);
  const cookie=header.split(';')[0];
+ assert.deepEqual(await (await gym(request('gym',{headers:{cookie}}))).json(),{connected:false});
+ assert.equal((await gym(request('gym?page=-1',{headers:{cookie}}))).status,400);
+ const originalFetch=globalThis.fetch;
+ let hevyCalls=0;
+ env.HEVY_API_KEY='fixture-hevy-key';
+ globalThis.fetch=async()=>{hevyCalls++;return Response.json({page:1,page_count:1,workouts:[]});};
+ try {
+  const journal=await gym(request('gym',{headers:{cookie}}));
+  assert.equal(journal.status,200);assert.equal((await journal.json()).connected,true);assert.match(journal.headers.get('cache-control'),/no-store/);
+  await gym(request('gym',{headers:{cookie}}));assert.equal(hevyCalls,1);
+  assert.equal((await gym(request('gym',{headers:{cookie:cookie+'tampered'}}))).status,401);assert.equal(hevyCalls,1);
+ } finally {globalThis.fetch=originalFetch;delete env.HEVY_API_KEY;}
  env.QUIET_CHAMBER_CONTENT=JSON.stringify({anime:{watched:[{title:'Private test collection'}]}});
  const collection=await content(request('content',{headers:{cookie}}));
  assert.equal(collection.status,200);assert.match(collection.headers.get('cache-control'),/no-store/);

@@ -50,6 +50,8 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
         waterTexture?: Phaser.Textures.CanvasTexture;
         waterSurface?: Phaser.GameObjects.Image;
         waterFrameTime = -100;
+        minion?: Phaser.GameObjects.Image;
+        minionGlow?: Phaser.GameObjects.Image;
         cornerLights: Phaser.GameObjects.Image[] = [];
         crystalCores: Phaser.GameObjects.Image[] = [];
         lanternCores: Phaser.GameObjects.Image[] = [];
@@ -62,7 +64,10 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           this.load.image("cavern", secret ? "/api/secret/art" : "/assets/cavern.webp");
           this.load.spritesheet("adventurer", "/assets/adventurer.png", { frameWidth: 64, frameHeight: 64 });
           if (!secret) this.load.image("secret-book", "/assets/secret-book.png");
-          else for(const asset of new Set(chamberCorners.map(corner=>corner.asset)))this.load.image(asset,`/assets/${asset}.png`);
+          else {
+            for(const asset of new Set(chamberCorners.map(corner=>corner.asset)))this.load.image(asset,`/assets/${asset}.png`);
+            this.load.image("caster-minion","/assets/caster-minion.png");
+          }
           this.load.on("loaderror", () => latest.current.onError());
         }
         create() {
@@ -95,6 +100,8 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
             this.summoningRing=ring;
           }
           if(secret){
+            this.minion=this.add.image(492,367,"caster-minion").setOrigin(0.5,1).setDisplaySize(62,85).setDepth(367);
+            this.minionGlow=this.add.image(475,309,"torch-light").setDisplaySize(70,80).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(369);
             for(const corner of chamberCorners){
               this.add.image(corner.artX,corner.artY,corner.asset).setOrigin(0.5,1).setDisplaySize(corner.width,corner.height).setDepth(corner.artY);
               this.cornerLights.push(this.add.image(corner.artX,corner.artY-corner.height*0.65,"torch-light").setDisplaySize(180,180).setBlendMode(Phaser.BlendModes.SCREEN).setDepth(corner.artY+1));
@@ -167,6 +174,8 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           this.glow.setAlpha(motion?0.74+Math.sin(time/109)*0.05+Math.sin(time/263)*0.08:0.8);
           const closest=!secret?landmarks.map(l=>({id:l.id,distance:Math.hypot(l.x-this.position.x,l.y-this.position.y)})).sort((a,b)=>a.distance-b.distance)[0]:null;
           const nearby=closest&&closest.distance<180?closest.id:null;
+          if(this.minion)this.minion.y=367-(motion?(1-Math.cos(time/430))*1.5:0);
+          if(this.minionGlow)this.minionGlow.setAlpha(motion?0.55+Math.sin(time/420)*0.12:0.55);
           const chamberNear=secret?nearbyChamberCorner(this.position.x,this.position.y):null;
           this.cornerLights.forEach((light,i)=>{
             const corner=chamberCorners[i];

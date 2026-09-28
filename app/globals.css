@@ -247,6 +247,7 @@ kbd { display:inline-grid; place-items:center; min-width:23px; height:24px; bord
 .collection-note { margin:22px 0 0; color:#a594b4; font-size:.875rem; line-height:1.7; }
 .collection-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:23px; color:#c2acd6; font-size:.875rem; }
 .anime-list { list-style:none; padding:0; margin:0; }
+.anime-source-note { margin:0 0 22px; }
 .anime-list li { display:flex; gap:20px; border-top:1px solid #65407966; padding:24px 0; }
 .anime-number { font:1.15rem Georgia,serif; color:#9b72b7; padding-top:3px; }
 .anime-list h3 { font-size:1.125rem; color:#ebdbf9; margin:0 0 7px; }
@@ -255,6 +256,31 @@ kbd { display:inline-grid; place-items:center; min-width:23px; height:24px; bord
 .season-records>h3 { font:1.6rem Georgia,serif; margin-bottom:20px; }
 .season-records article { border-top:1px solid #68478477; padding:18px 0; }
 .season-records article>span { color:#d5b4ef; font-size:.875rem; }
+.gym-summary { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+.gym-summary>div { padding:18px; background:#281a37; border:1px solid #67467e; border-radius:7px; }
+.gym-summary strong { display:block; font:2rem Georgia,serif; color:#e5c8ff; }
+.gym-summary span { display:block; margin-top:8px; color:#bdaacb; font-size:.875rem; }
+.gym-tabs [data-slot=tabs-list] { width:100%; height:44px; margin-bottom:10px; background:#100b19; border:1px solid #604174; }
+.gym-tabs [data-slot=tabs-trigger][data-state=active] { background:#362148; color:#ecd6ff; }
+.workout-card { border:1px solid #5c3d7166; padding:21px; border-radius:7px; background:#180f22; margin-top:14px; }
+.workout-heading h3 { font:1.6rem Georgia,serif; margin:9px 0; overflow-wrap:anywhere; }
+.workout-heading>span:last-child { color:#bca8ca; font-size:.875rem; }
+.workout-card summary { cursor:pointer; color:#cfaaeb; padding:19px 0 3px; font-size:.875rem; }
+.workout-card summary:focus-visible { outline:2px solid #cda3ec; outline-offset:3px; }
+.workout-exercise { margin-top:22px; }
+.workout-exercise h4 { margin:0 0 12px; font-size:1rem; color:#e0cceb; }
+.workout-exercise ol { padding:0; margin:0; list-style:none; }
+.workout-exercise li { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-top:1px solid #64477a44; font-size:.875rem; color:#c9b6d8; line-height:1.6; }
+.workout-exercise small { display:block; color:#9f89b1; font-size:.75rem; text-transform:capitalize; }
+.set-number { width:24px; flex-shrink:0; color:#9772af; }
+.workout-note { color:#bba9cb; font-size:.875rem; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
+.best-set-list { display:grid; gap:12px; margin-top:22px; }
+.best-set-list article { padding:20px; border:1px solid #69478077; border-radius:6px; background:#1b1027; }
+.best-set-list h3 { margin:0 0 12px; font-size:1rem; }
+.best-set-list strong { display:block; color:#dab6f8; font-size:1.125rem; font-weight:500; }
+.best-set-list span { display:block; color:#aa92ba; font-size:.875rem; margin-top:9px; }
+.gym-loading,.gym-error { color:#bda5d0; line-height:1.7; margin:24px 0; }
+.gym-more { margin-top:22px; }
 @media(max-width:1100px) { .chamber-navigation { left:20px; bottom:80px; } .chamber-navigation button { padding:5px 8px; } }
 @media(max-width:700px) {
   .quiet-stage .cave-intro h1 { font-size:1.5rem; }
