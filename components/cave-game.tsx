@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { landmarks, type SectionId } from "@/lib/portfolio";
+import { landmarks, QUEST_BOARD, type SectionId } from "@/lib/portfolio";
 import { WORLD_WIDTH, WORLD_HEIGHT, movePlayer } from "@/lib/cave-physics";
 import { chamberCorners, isChamberWalkable, nearbyChamberCorner, type ChamberId } from "@/lib/chamber";
 import { SECRET_BOOK } from "@/lib/secret-sequence";
@@ -71,7 +71,10 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
         preload() {
           this.load.image("cavern", secret ? "/api/secret/art" : "/assets/cavern.webp");
           this.load.spritesheet("adventurer", "/assets/adventurer.png", { frameWidth: 64, frameHeight: 64 });
-          if (!secret) this.load.image("secret-book", "/assets/secret-book.png");
+          if (!secret) {
+            this.load.image("secret-book", "/assets/secret-book.png");
+            this.load.image("quest-board", "/assets/quest-board.png");
+          }
           else {
             for(const asset of new Set(chamberCorners.map(corner=>corner.asset)))this.load.image(asset,`/assets/${asset}.png`);
             this.load.image("caster-minion","/assets/caster-minion.png");
@@ -91,6 +94,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           };
           makeLight("torch-light","rgba(172,87,255");makeLight("lantern-light","rgba(255,167,74");
           if (!secret) {
+            this.add.image(QUEST_BOARD.x,QUEST_BOARD.y,"quest-board").setOrigin(0.5,1).setDisplaySize(QUEST_BOARD.width,QUEST_BOARD.height).setDepth(QUEST_BOARD.y);
             this.summoningGlow=this.add.image(768,690,"torch-light").setDisplaySize(310,170).setBlendMode(Phaser.BlendModes.SCREEN).setAlpha(0.55);
             const ring=this.add.graphics();
             ring.lineStyle(7,0x984cea,0.12);ring.strokeCircle(0,0,111);

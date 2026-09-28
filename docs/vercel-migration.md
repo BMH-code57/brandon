@@ -16,10 +16,11 @@ Set these values in Vercel Project Settings > Environment Variables. Keep all cr
 | `CAVERN_REDIS_PREFIX` | `brandon-cavern`; keep stable across deployments |
 | `QUIET_CHAMBER_CONTENT` | Private JSON collection; existing numbered continuation variables also work |
 | `HEVY_API_KEY` | Existing read-only workout connection |
+| `QUEST_EDITOR_KEY_HASH` | SHA-256 hash of a separate, randomly generated owner key for article editing |
 
 The password verifier and signing key must be moved together. Existing cookies from the former host are rejected by the new session context. A successful login is remembered for seven days and renewed on verified visits. Do not put the plaintext password in Vercel or GitHub.
 
-Connect an Upstash Redis database through Vercel's Storage/Marketplace flow or use an existing Upstash database. Set its REST URL and standard token on the project. Redis stores password attempt counters with a 15-minute expiry and the private receipt. Missing storage causes password entry to fail closed. Production must never use a process-local substitute for rate limiting.
+Connect an Upstash Redis database through Vercel's Storage/Marketplace flow or use an existing Upstash database. Set its REST URL and standard token on the project. Redis stores password attempt counters with a 15-minute expiry the private receipt, and public article records. Missing storage causes password entry to fail closed. Production must never use a process-local substitute for rate limiting.
 
 Use separate Redis credentials or a distinct `CAVERN_REDIS_PREFIX` for untrusted preview environments. Only assign private production data to previews you intend to share with trusted people. Keep Vercel's preview deployment protection enabled.
 
@@ -52,3 +53,9 @@ The existing Sites deployment remains available until the Vercel deployment is v
 - [Environment variables](https://vercel.com/docs/environment-variables)
 - [Trusted request headers](https://vercel.com/docs/headers/request-headers)
 - [Upstash REST transactions](https://upstash.com/docs/redis/features/restapi)
+
+## Article board
+
+The public quest board reads the same articles in the cave and standard view. The owner editor is at `/quest-board/edit`. A title, article URL, and optional note are enough to publish a new entry. Entries appear newest first without a rebuild. Editing preserves the original posting date; removing an entry asks for confirmation.
+
+Set `QUEST_EDITOR_KEY_HASH` to the SHA-256 hash of a random owner access key of at least 32 bytes. Keep the original key in a password manager and enter it in the editor. The owner session is separate from visitor access and lasts seven days. Never reuse the visitor password or commit the owner key. Article mutations require an authenticated owner session and an allowed origin.

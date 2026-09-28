@@ -1,11 +1,14 @@
-export type SectionId = "about" | "projects" | "experience" | "contact";
+export type SectionId = "about" | "projects" | "experience" | "contact" | "articles";
 export const landmarks: { id: SectionId; title: string; place: string; x: number; y: number; labelX?: number; labelY?: number; glowX: number; glowY: number; number: string }[] = [
-  { id: "about", title: "About me", place: "The story shrine", x: 375, y: 350, labelX: 290, labelY: 280, glowX: 240, glowY: 165, number: "01" },
-  { id: "projects", title: "Projects", place: "The crystal workshop", x: 1190, y: 350, labelX: 1260, labelY: 285, glowX: 1200, glowY: 155, number: "02" },
-  { id: "experience", title: "Experience", place: "The old archive", x: 480, y: 735, glowX: 260, glowY: 745, number: "03" },
-  { id: "contact", title: "Get in touch", place: "The portal", x: 1130, y: 745, glowX: 1360, glowY: 795, number: "04" },
+  { id: "about", title: "About me", place: "The story shrine", x: 375, y: 350, labelX: 265, labelY: 278, glowX: 240, glowY: 165, number: "01" },
+  { id: "projects", title: "Projects", place: "The crystal workshop", x: 1190, y: 350, labelX: 1220, labelY: 244, glowX: 1200, glowY: 155, number: "02" },
+  { id: "experience", title: "Experience", place: "The old archive", x: 480, y: 735, labelX: 345, labelY: 775, glowX: 260, glowY: 745, number: "03" },
+  { id: "contact", title: "Get in touch", place: "The portal", x: 1130, y: 745, labelX: 1265, labelY: 851, glowX: 1360, glowY: 795, number: "04" },
+  { id: "articles", title: "Quest board", place: "The reading alcove", x: 1210, y: 530, labelX: 1350, labelY: 538, glowX: 1350, glowY: 459, number: "05" },
 ];
+export const QUEST_BOARD = { x: 1350, y: 548, width: 165, height: 170 };
 export const sectionCopy: Record<SectionId, { eyebrow: string; title: string; intro: string }> = {
+  articles: { eyebrow: "05 / THE READING ALCOVE", title: "Worth a little detour.", intro: "Articles and ideas that caught my attention, pinned here for curious travelers." },
   about: { eyebrow: "01 / THE STORY SHRINE", title: "I am Brandon.", intro: "A cybersecurity specialist and systems builder working across AI, data, risk, and product engineering." },
   projects: { eyebrow: "02 / THE CRYSTAL WORKSHOP", title: "Ideas taking shape.", intro: "Three concepts exploring movement, knowledge, and the world around us." },
   experience: { eyebrow: "03 / THE OLD ARCHIVE", title: "The path so far.", intro: "Computer science, practical leadership, and a growing focus on AI safety." },

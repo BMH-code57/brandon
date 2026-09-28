@@ -6,7 +6,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0",
+    "dev": "node scripts/dev-server.mjs",
     "build": "next build --webpack",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint . --ignore-pattern .next",
