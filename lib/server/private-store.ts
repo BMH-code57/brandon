@@ -1,8 +1,11 @@
 // Keep this module in server routes. Never expose Redis credentials to the browser.
 type Command = (string | number)[];
 function connection() {
-  const raw=process.env.UPSTASH_REDIS_REST_URL;
-  const token=process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Vercel Marketplace supplies KV_REST_API_* for Upstash databases.
+  // Keep each endpoint paired with its own token, including incomplete config.
+  const direct=!!(process.env.UPSTASH_REDIS_REST_URL||process.env.UPSTASH_REDIS_REST_TOKEN);
+  const raw=direct?process.env.UPSTASH_REDIS_REST_URL:process.env.KV_REST_API_URL;
+  const token=direct?process.env.UPSTASH_REDIS_REST_TOKEN:process.env.KV_REST_API_TOKEN;
   if(!raw||!token)throw new Error("Private storage is not configured");
   const url=new URL(raw);
   if(url.protocol!=="https:"||url.username||url.password||url.search||url.hash||url.pathname!=="/")throw new Error("Invalid private storage endpoint");
