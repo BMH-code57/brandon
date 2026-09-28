@@ -1,0 +1,139 @@
+{
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "footAnchor": [
+    32,
+    60
+  ],
+  "frameRate": 6.67,
+  "frames": [
+    {
+      "direction": "down",
+      "frame": 0,
+      "x": 0,
+      "y": 0,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "down",
+      "frame": 1,
+      "x": 64,
+      "y": 0,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "down",
+      "frame": 2,
+      "x": 128,
+      "y": 0,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "down",
+      "frame": 3,
+      "x": 192,
+      "y": 0,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "left",
+      "frame": 0,
+      "x": 0,
+      "y": 64,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "left",
+      "frame": 1,
+      "x": 64,
+      "y": 64,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "left",
+      "frame": 2,
+      "x": 128,
+      "y": 64,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "left",
+      "frame": 3,
+      "x": 192,
+      "y": 64,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "right",
+      "frame": 0,
+      "x": 0,
+      "y": 128,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "right",
+      "frame": 1,
+      "x": 64,
+      "y": 128,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "right",
+      "frame": 2,
+      "x": 128,
+      "y": 128,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "right",
+      "frame": 3,
+      "x": 192,
+      "y": 128,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "up",
+      "frame": 0,
+      "x": 0,
+      "y": 192,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "up",
+      "frame": 1,
+      "x": 64,
+      "y": 192,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "up",
+      "frame": 2,
+      "x": 128,
+      "y": 192,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "direction": "up",
+      "frame": 3,
+      "x": 192,
+      "y": 192,
+      "width": 64,
+      "height": 64
+    }
+  ]
+}
