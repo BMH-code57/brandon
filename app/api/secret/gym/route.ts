@@ -1,7 +1,7 @@
-import {env} from "cloudflare:workers";
 import {authorized,noStore} from "@/lib/server/secret-access";
 import {digest} from "@/lib/secret-crypto";
 import {HevyError,loadHevyPage} from "@/lib/server/hevy";
+export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const cache=new Map<string,{until:number;value:Awaited<ReturnType<typeof loadHevyPage>>}>();
 
@@ -10,7 +10,7 @@ export async function GET(request:Request) {
   const raw=new URL(request.url).searchParams.get("page")??"1";
   const page=Number(raw);
   if(!/^\d+$/.test(raw)||!Number.isSafeInteger(page)||page<1||page>100000)return Response.json({error:"Invalid workout page."},{status:400,headers:noStore});
-  const key=env.HEVY_API_KEY?.trim();
+  const key=process.env.HEVY_API_KEY?.trim();
   if(!key)return Response.json({connected:false},{headers:noStore});
   try {
     const cacheKey=`${await digest(key)}:${page}`;

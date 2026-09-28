@@ -1,23 +1,54 @@
-# Moving to Vercel later
+# Vercel deployment
 
-The current live site runs on Sites with Vinext, a Cloudflare Worker, and a D1 database. The present `pnpm build` output is for that environment. Importing this repository into Vercel without adapting the server code will not produce an equivalent working site.
+This branch runs the portfolio with standard Next.js on Node.js 24. Import `BMH-code57/brandon` into Vercel, select the Next.js framework, and use pnpm with the committed lockfile. `vercel.json` supplies the install and build commands. The production branch can be `main`; pushes then trigger deployments automatically.
 
-## Migration plan
+## Private configuration
 
-1. Create a migration branch and run the existing App Router pages with standard Next.js. Preserve the React/Phaser UI, artwork, controls, and the two viewing modes. Replace Vinext build/dev scripts and Cloudflare-specific Vite configuration with the Next.js equivalents, then verify the installed package versions on Vercel.
-2. Replace `cloudflare:workers` environment access with server-only environment variables. Keep the password verifier and session signing key out of browser bundles.
-3. Replace the D1 attempt counter with a durable server-side store supported from Vercel. Preserve the five-attempt, 15-minute rate limit. Do not replace it with process memory in serverless functions.
-4. Remove reliance on Sites identity headers. Determine a trusted visitor identity and trusted client-IP source for the new host. A client-supplied identity or forwarded header must not bypass rate limiting. Invalidate existing sessions when migrating.
-5. Configure `SECRET_PASSWORD_VERIFIER`, `SECRET_SESSION_KEY`, `SECRET_ALLOWED_ORIGIN`, and optional `QUIET_CHAMBER_CONTENT` and `HEVY_API_KEY` in Vercel. Keep the Hevy key server-only and retain the authenticated read-only workout route. Set a fixed trusted origin for each tested environment. Revisit cookie attributes for standalone hosting and keep HttpOnly, Secure, and exact-origin checks.
-6. Import the GitHub repository into Vercel and select the migration branch for initial previews. Check welcome, both portfolio views, mobile controls, password entry, remembered access, content protection, and all four chamber corners before switching production.
-7. Add the intended domain and verify HTTPS. Decide whether the main portfolio should become public; the current Sites audience is private. Keep chamber access separate from that decision.
+Set these values in Vercel Project Settings > Environment Variables. Keep all credentials and collection JSON server-only. Do not give these names a `NEXT_PUBLIC_` prefix.
 
-The visual site does not need a redesign for this move. Server authentication, persistence, and build configuration need adaptation.
+| Variable | Purpose |
+| --- | --- |
+| `SECRET_PASSWORD_VERIFIER` | Existing salted password verifier |
+| `SECRET_SESSION_KEY` | Matching session signing key and password pepper |
+| `SECRET_ALLOWED_ORIGIN` | Exact site origin, initially the Vercel project URL and later `https://brandonholda.com` |
+| `UPSTASH_REDIS_REST_URL` | HTTPS REST endpoint of the connected Redis database |
+| `UPSTASH_REDIS_REST_TOKEN` | Redis standard token with read and write access |
+| `CAVERN_REDIS_PREFIX` | `brandon-cavern`; keep stable across deployments |
+| `QUIET_CHAMBER_CONTENT` | Private JSON collection; existing numbered continuation variables also work |
+| `HEVY_API_KEY` | Existing read-only workout connection |
 
-## Official references
+The password verifier and signing key must be moved together. Existing cookies from the former host are rejected by the new session context. A successful login is remembered for seven days and renewed on verified visits. Do not put the plaintext password in Vercel or GitHub.
+
+Connect an Upstash Redis database through Vercel's Storage/Marketplace flow or use an existing Upstash database. Set its REST URL and standard token on the project. Redis stores password attempt counters with a 15-minute expiry and the private receipt. Missing storage causes password entry to fail closed. Production must never use a process-local substitute for rate limiting.
+
+Use separate Redis credentials or a distinct `CAVERN_REDIS_PREFIX` for untrusted preview environments. Only assign private production data to previews you intend to share with trusted people. Keep Vercel's preview deployment protection enabled.
+
+## Receipt import
+
+The receipt cannot be bundled into the public repository. It also exceeds Vercel's environment budget when combined with the other settings. Upload it once to the connected private store:
+
+```sh
+node --env-file=.env.local scripts/upload-private-receipt.mjs /absolute/path/to/receipt.webp
+```
+
+Only the authenticated receipt route reads the resulting key. Do not upload this image to public assets. Do not copy the former `LEAGUE_RECEIPT_1` through `LEAGUE_RECEIPT_14` environment variables to Vercel.
+
+## Domain
+
+After purchasing the domain, add `brandonholda.com` and `www.brandonholda.com` under the project's Settings > Domains. Choose the apex domain as primary and redirect `www` to it. Copy the exact DNS records displayed by Vercel into the registrar's DNS settings. Keep any existing mail records intact. Wait for Vercel to confirm the domain and issue HTTPS before sharing it.
+
+Update `SECRET_ALLOWED_ORIGIN` to `https://brandonholda.com` and redeploy. Vercel's server-injected deployment URL is also allowed for preview checks; arbitrary request Host or Origin headers never extend the allowlist. Keep the domain pointed directly at Vercel so its trusted IP header identifies visitors correctly.
+
+## Release checks
+
+Run `pnpm test` and `pnpm build`. Check the welcome page, both portfolio views, the protected passage, remembered access, the receipt, and Hevy workouts on the preview deployment before promoting it. Confirm unauthenticated private endpoints return 401. Production publication is a separate account action; a successful local build does not mean the site has been deployed.
+
+The existing Sites deployment remains available until the Vercel deployment is verified. Migration does not automatically change the old site's sharing or DNS.
+
+## References
 
 - [Next.js on Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs)
-- [Deploying Git repositories](https://vercel.com/docs/git)
-- [Vercel environment variables](https://vercel.com/docs/environment-variables)
-
-No Vercel deployment has been created for this project yet.
+- [Vercel Git integration](https://vercel.com/docs/git)
+- [Environment variables](https://vercel.com/docs/environment-variables)
+- [Trusted request headers](https://vercel.com/docs/headers/request-headers)
+- [Upstash REST transactions](https://upstash.com/docs/redis/features/restapi)

@@ -2,25 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 
-import {env,password,sqlite} from './fixtures/secret-env.mjs';
+import {env,password,records,requests,redisFetch,advanceClock} from './fixtures/secret-env.mjs';
 const root=new URL('../',import.meta.url);
 registerHooks({resolve(specifier,context,next){
- if(specifier==='cloudflare:workers')return{url:new URL('./fixtures/secret-env.mjs',import.meta.url).href,shortCircuit:true};
  if(specifier.startsWith('@/'))return{url:new URL(specifier.slice(2)+'.ts',root).href,shortCircuit:true};
  return next(specifier,context);
 }});
-const {unlock,leave}=await import('../lib/server/secret-access.ts');
+const {createSession}=await import('../lib/secret-crypto.ts');
+const {unlock,leave,visitorIdentity}=await import('../lib/server/secret-access.ts');
 const {GET:session}=await import('../app/api/secret/session/route.ts');
 const {GET:art}=await import('../app/api/secret/art/route.ts');
 const {GET:content}=await import('../app/api/secret/content/route.ts');
 const {GET:receipt}=await import('../app/api/secret/receipt/route.ts');
 const {GET:gym}=await import('../app/api/secret/gym/route.ts');
 const request=(path,options={})=>new Request('https://cavern.example/api/secret/'+path,{
- ...options,headers:{origin:env.SECRET_ALLOWED_ORIGIN,'content-type':'application/json','oai-authenticated-user-id':'test-visitor',...options.headers},
+ ...options,headers:{origin:env.SECRET_ALLOWED_ORIGIN,'content-type':'application/json','x-forwarded-for':'203.0.113.10',...options.headers},
 });
 const attempt=(value,headers={})=>unlock(request('unlock',{method:'POST',headers,body:JSON.stringify({password:value})}));
 
-test('secret routes enforce authentication, protect art, expire cookies and rate-limit attempts',async()=>{
+test('Vercel routes protect data, use durable limits, reject spoofed identities and renew sessions',async(t)=>{
+ const realFetch=globalThis.fetch;globalThis.fetch=redisFetch;t.after(()=>{globalThis.fetch=realFetch;});
  assert.equal((await session(request('session'))).status,401);
  assert.equal((await art(request('art'))).status,401);
  assert.equal((await content(request('content'))).status,401);
@@ -31,7 +32,7 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
  const unlocked=await attempt(password);
  assert.equal(unlocked.status,200);
  const header=unlocked.headers.get('set-cookie');
- assert.match(header,/__Host-cavern-session=/);assert.match(header,/HttpOnly/);assert.match(header,/SameSite=None/);assert.match(header,/Partitioned/);assert.match(header,/Secure/);assert.match(header,/Max-Age=604800/);
+ assert.match(header,/__Host-cavern-session=/);assert.match(header,/HttpOnly/);assert.match(header,/SameSite=Lax/);assert.doesNotMatch(header,/Partitioned/);assert.match(header,/Secure/);assert.match(header,/Max-Age=604800/);
  const cookie=header.split(';')[0];
  assert.deepEqual(await (await gym(request('gym',{headers:{cookie}}))).json(),{connected:false});
  assert.equal((await gym(request('gym?page=-1',{headers:{cookie}}))).status,400);
@@ -47,7 +48,7 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
  } finally {globalThis.fetch=originalFetch;delete env.HEVY_API_KEY;}
  assert.equal((await receipt(request('receipt',{headers:{cookie}}))).status,503);
  const image=Buffer.from('RIFFtestWEBPfixture').toString('base64');
- env.LEAGUE_RECEIPT_1=image.slice(0,8);env.LEAGUE_RECEIPT_2=image.slice(8);
+ records.set('test-cavern:league-receipt',{value:image});
  const receiptResponse=await receipt(request('receipt',{headers:{cookie}}));
  assert.equal(receiptResponse.status,200);assert.equal(receiptResponse.headers.get('content-type'),'image/webp');
  assert.match(receiptResponse.headers.get('cache-control'),/no-store/);
@@ -72,11 +73,24 @@ test('secret routes enforce authentication, protect art, expire cookies and rate
  assert.equal(picture.status,200);assert.equal(picture.headers.get('content-type'),'image/webp');
  assert.match(picture.headers.get('cache-control'),/no-store/);assert.ok((await picture.arrayBuffer()).byteLength>10000);
  assert.equal((await art(request('art',{headers:{cookie:cookie+'tampered'}}))).status,401);
- assert.equal((await session(request('session',{headers:{cookie,'oai-authenticated-user-id':'different-visitor'}}))).status,401);
+ assert.equal((await session(request('session',{headers:{cookie,'oai-authenticated-user-id':'spoofed'}}))).status,200);
+ const legacy=await createSession(env.SECRET_SESSION_KEY,env.SECRET_PASSWORD_VERIFIER,'visitor');
+ assert.equal((await session(request('session',{headers:{cookie:'__Host-cavern-session='+legacy}}))).status,401);
+ assert.equal(visitorIdentity(request('unlock',{headers:{'x-forwarded-for':'invalid','cf-connecting-ip':'1.2.3.4'}})),'unknown');
+ assert.equal((await attempt(password,{origin:'https://cavern-test.vercel.app'})).status,200);
+ assert.equal((await attempt(password,{origin:'https://untrusted.vercel.app'})).status,403);
  const locked=leave(request('leave',{method:'POST',headers:{cookie}}));assert.equal(locked.status,200);assert.match(locked.headers.get('set-cookie'),/Max-Age=0/);
- for(let i=1;i<=6;i++)assert.equal((await attempt('wrong',{'oai-authenticated-user-id':'rate-test'})).status,i<=5?401:429);
- const original=env.SECRET_SESSION_KEY;env.SECRET_SESSION_KEY=undefined;
+ for(let i=1;i<=6;i++)assert.equal((await attempt('wrong',{'x-forwarded-for':'203.0.113.99','oai-authenticated-user-id':'spoof-'+i,'cf-connecting-ip':'192.0.2.'+i})).status,i<=5?401:429);
+ assert.equal((await attempt(password,{'x-forwarded-for':'203.0.113.99'})).status,429);
+ advanceClock(901000);
+ assert.equal((await attempt(password,{'x-forwarded-for':'203.0.113.99'})).status,200);
+ assert.ok(requests.some(r=>r.url.endsWith('/multi-exec')));
+ const token=env.UPSTASH_REDIS_REST_TOKEN;delete env.UPSTASH_REDIS_REST_TOKEN;
+ assert.equal((await attempt(password)).status,503);env.UPSTASH_REDIS_REST_TOKEN=token;
+ globalThis.fetch=async()=>Response.json([{result:1},{error:'storage failed'},{result:900}]);
+ assert.equal((await attempt(password)).status,503);globalThis.fetch=redisFetch;
+ const original=env.SECRET_SESSION_KEY;delete env.SECRET_SESSION_KEY;
  assert.equal((await session(request('session',{headers:{cookie}}))).status,401);assert.equal((await attempt(password)).status,503);
  env.SECRET_SESSION_KEY=original;
- sqlite.close();
+
 });

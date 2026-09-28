@@ -4,9 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Brandon Holda | The Cavern",
   description: "Explore Brandon Holda's work in cybersecurity, AI, and systems through an interactive cavern or a standard scrolling portfolio.",
-  other: {
-    "codex-preview": "development",
-  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

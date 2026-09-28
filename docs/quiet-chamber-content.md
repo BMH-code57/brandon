@@ -29,7 +29,7 @@ League content supports a dated `snapshot` with `hoursPlayed`, `rank`, `recorded
 
 Personal records live in runtime configuration so a public source repository does not expose them. `GET /api/secret/content` validates the signed chamber session and uses private, no-store responses. Never put confidential records in committed files or public assets.
 
-For larger collections, split the serialized JSON into pieces of at most 4,000 UTF-8 bytes and store them in order in `QUIET_CHAMBER_CONTENT`, `QUIET_CHAMBER_CONTENT_2`, `QUIET_CHAMBER_CONTENT_3`, and `QUIET_CHAMBER_CONTENT_4`. The authenticated route joins these values before parsing. Keep every chunk secret; clear unused continuation variables when replacing a larger collection with a smaller one. Do not insert extra separators between chunks.
+A single environment value is supported on Vercel. For older split collections, split the serialized JSON into pieces of at most 4,000 UTF-8 bytes and store them in order in `QUIET_CHAMBER_CONTENT`, `QUIET_CHAMBER_CONTENT_2`, `QUIET_CHAMBER_CONTENT_3`, and `QUIET_CHAMBER_CONTENT_4`. The authenticated route joins these values before parsing. Keep every chunk secret; clear unused continuation variables when replacing a larger collection with a smaller one. Do not insert extra separators between chunks.
 
 Live third-party profiles open in a new tab. The site does not scrape or iframe third-party pages, and does not imply that manually supplied season notes update automatically. The panel itself scrolls through supplied seasons or watched titles. An automated stats integration can be designed after the exact accounts and available APIs are confirmed.
 
@@ -37,7 +37,7 @@ All four corners can be opened using E near the prop, its clickable label, the c
 
 ## Hevy training journal
 
-Configure the optional server secret `HEVY_API_KEY` using the key from [Hevy developer settings](https://hevy.com/settings?developer). Never use a browser-exposed environment variable for it. Local development reads ignored `.env` and `.dev.vars` files; production reads the hosted secret.
+Configure the optional server secret `HEVY_API_KEY` using the key from [Hevy developer settings](https://hevy.com/settings?developer). Never use a browser-exposed environment variable for it. Local development reads ignored `.env.local` files; production reads the hosted secret.
 
 `GET /api/secret/gym` requires the same signed chamber session before reading Hevy. The integration makes read-only requests to the official `/v1/workouts` endpoint, ten workouts per page. It displays workout dates, descriptions, exercises, notes, set types, weight, reps, distance, duration, RPE, and custom measurements when present. Weight is shown in both kilograms and pounds.
 
