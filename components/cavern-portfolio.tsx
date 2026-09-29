@@ -147,7 +147,7 @@ export default function CavernPortfolio() {
         {!secretRoom && rememberedRoom && <button className="return-cavern remembered-passage" onClick={openPassage} disabled={checkingPassage}><Sparkles size={15}/>{checkingPassage?"Opening...":"Return to the quiet chamber"}</button>}
         {checkingPassage && !rememberedRoom && <p className="passage-notice" role="status">Opening the passage...</p>}
         {ready && !failed && !secretRoom && snapshot.bookPoint && <button className={`secret-book-hit ${snapshot.bookNear ? "close-to-book" : ""}`} style={{left:snapshot.bookPoint.x,top:snapshot.bookPoint.y}} onClick={inspectBook} aria-label="Inspect the upside-down book"><span className="book-hint">{bookCount ? "A whisper answers..." : "An unusual book"}</span>{bookCount>0 && <span className="book-runes" aria-label={`${bookCount} consecutive interactions`}>{[1,2,3,4].map(number=><i key={number} className={number<=bookCount?"lit":""}/>)}</span>}</button>}
-        {ready && !failed && secretRoom && snapshot.fairyNear && snapshot.fairyPoint && !chamberSection && !help && !leaving && <div className="fairy-speech" role="status" style={{left:snapshot.fairyPoint.x,top:snapshot.fairyPoint.y}}>Hey!</div>}
+        {ready && !failed && secretRoom && snapshot.fairyNear && snapshot.fairyPoint && !chamberSection && !help && !leaving && <div className="fairy-speech" role="status" style={{left:snapshot.fairyPoint.x,top:snapshot.fairyPoint.y}}>Hey, Listen!</div>}
         {passageNotice && <p className="passage-notice" role="status">{passageNotice}</p>}
         {ready && !failed && secretRoom && <div className="landmark-layer">{snapshot.chamberMarkers?.map(marker=>{
           const corner=chamberCorners.find(item=>item.id===marker.id)!;

@@ -5,6 +5,7 @@ import { WORLD_WIDTH, WORLD_HEIGHT, movePlayer } from "@/lib/cave-physics";
 import { chamberCorners, isChamberWalkable, nearbyChamberCorner, type ChamberId } from "@/lib/chamber";
 import { SECRET_BOOK } from "@/lib/secret-sequence";
 import { chamberCrystals, chamberLanterns, chamberWater, paintChamberWater } from "@/lib/chamber-atmosphere";
+import { AdventurerAnimation } from "@/lib/adventurer-animation";
 export type GameSnapshot = { fairyNear?: boolean; fairyPoint?: {x:number;y:number}; player: { x: number; y: number }; nearby: SectionId | null; markers: { id: SectionId; x: number; y: number }[]; bookNear?: boolean; bookPoint?: {x:number;y:number}; exitNear?: boolean; chamberNear?: ChamberId|null; chamberMarkers?: {id:ChamberId;x:number;y:number}[] };
 export type GameControls = { x: number; y: number; interact: boolean; reset: boolean };
 export default function CaveGame({ controls, paused, reducedMotion, secret = false, onUpdate, onInteract, onChamber, onBook, onMove, onLeave, onReady, onError }: {
@@ -38,6 +39,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
       cleanupKeys = () => { window.removeEventListener("keydown", press); window.removeEventListener("keyup", release); window.removeEventListener("blur", clear); document.removeEventListener("visibilitychange", clear); };
       class Cavern extends Phaser.Scene {
         player!: Phaser.GameObjects.Sprite;
+        adventurer!: AdventurerAnimation;
         shadow!: Phaser.GameObjects.Ellipse;
         glow!: Phaser.GameObjects.Image;
         book?: Phaser.GameObjects.Image;
@@ -67,7 +69,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
         landmarkGlows: Phaser.GameObjects.Image[] = [];
         lanternGlows: Phaser.GameObjects.Image[] = [];
         position = {x:768,y:secret ? 655 : 690};
-        facing = 0; walkTime = 0; snapshotTime = 0;
+        facing = 0; snapshotTime = 0;
         preload() {
           this.load.image("cavern", secret ? "/api/secret/art" : "/assets/cavern.webp");
           this.load.spritesheet("adventurer", "/assets/adventurer.png", { frameWidth: 64, frameHeight: 64 });
@@ -153,6 +155,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           this.glow=this.add.image(768,610,"torch-light").setDisplaySize(360,310).setBlendMode(Phaser.BlendModes.SCREEN);
           this.shadow=this.add.ellipse(this.position.x,this.position.y,45,15,0x08040e,0.5);
           this.player=this.add.sprite(this.position.x,this.position.y,"adventurer",0).setOrigin(0.5,60/64).setScale(1.65);
+          this.adventurer=new AdventurerAnimation(this,this.player);
           for(let i=0;i<32;i++) this.motes.push(this.add.circle(220+(i*197%1100),180+(i*127%680),i%3===0?2:1,0xc79aef,0.28));
           for(let i=0;i<28;i++){
             const angle=i*Math.PI*2/28;
@@ -178,6 +181,7 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
           let dx=controls.current.x+(held.has("d")||held.has("arrowright")?1:0)-(held.has("a")||held.has("arrowleft")?1:0);
           let dy=controls.current.y+(held.has("s")||held.has("arrowdown")?1:0)-(held.has("w")||held.has("arrowup")?1:0);
           const length=Math.hypot(dx,dy), motion=!latest.current.reducedMotion;
+          const previous={...this.position};
           if(length>0){
             latest.current.onMove();dx/=length;dy/=length;
             const distance=235*Math.min(delta,40)/1000;
@@ -189,14 +193,13 @@ export default function CaveGame({ controls, paused, reducedMotion, secret = fal
               this.position={x,y};
             } else this.position=movePlayer(this.position.x,this.position.y,dx*distance,dy*distance);
             this.facing=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0);
-            this.walkTime+=delta;this.player.setFrame(this.facing*4+Math.floor(this.walkTime/150)%4);
-          } else {this.walkTime=0;this.player.setFrame(this.facing*4);}
-          const bob=motion&&length===0?(1-Math.cos(time/270))*2.2:0;
-          this.player.setPosition(this.position.x,this.position.y-bob).setDepth(this.position.y);
+          }
+          const distanceMoved=Math.hypot(this.position.x-previous.x,this.position.y-previous.y);
+          const {bob,flameX,flameY}=this.adventurer.update(this.position.x,this.position.y,this.facing,distanceMoved,time,motion);
           this.shadow.setDepth(this.position.y-1);
           this.glow.setDepth(this.position.y+1);
           this.shadow.setPosition(this.position.x,this.position.y-1).setScale(1-bob*0.025);
-          this.glow.setPosition(this.position.x+(this.facing===1?-23:23),this.position.y-48-bob);
+          this.glow.setPosition(flameX,flameY);
           this.glow.setAlpha(motion?0.74+Math.sin(time/109)*0.05+Math.sin(time/263)*0.08:0.8);
           const closest=!secret?landmarks.map(l=>({id:l.id,distance:Math.hypot(l.x-this.position.x,l.y-this.position.y)})).sort((a,b)=>a.distance-b.distance)[0]:null;
           const nearby=closest&&closest.distance<180?closest.id:null;
