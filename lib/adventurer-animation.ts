@@ -32,7 +32,8 @@ export class AdventurerAnimation {
     const bob = motion ? (walking ? Math.abs(step)*2 : (1-Math.cos(time/270))*2.2) : 0;
     const bodyY = y-bob;
     this.body.setFrame(sourceFacing*4+frame).setFlipX(mirrored).setPosition(x,bodyY).setDepth(y);
-    if (rigged) this.body.setCrop(0,0,64,50);
+    // Keep the side cloak's full hem in front of the upright rear leg.
+    if (rigged) this.body.setCrop(0,0,64,side ? 52 : 50);
     else this.body.setCrop();
 
     // Include the entire shin and upper leg, with four pixels of overlap behind
